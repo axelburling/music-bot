@@ -1,0 +1,23 @@
+{
+  "name": "Rhytm",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon src/index.ts",
+    "start": "ts-node src/index.ts",
+    "prod": "rm -rf dist/ && tsc --build --force && node dist/index.js"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.6.0",
+    "discord-music-player": "^8.0.2",
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.9.2",
+    "nodemon": "^2.0.12",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  }
+}
