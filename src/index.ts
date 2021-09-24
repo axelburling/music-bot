@@ -9,7 +9,7 @@ import {
   GuildChannelResolvable,
   Intents,
   Message,
-  MessageAttachment,
+
   MessageEmbed
 } from "discord.js";
 import { config } from "dotenv";
@@ -62,6 +62,7 @@ const settings = {
   prefix: "!",
   token: process.env.TOKEN,
   dev_token: process.env.DEV_TOKEN,
+  troll_id: process.env.TROLL_TOKEN
 };
 
 const player = new Player(client, { leaveOnEmpty: false, leaveOnStop: false });
@@ -73,20 +74,9 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", async (message) => {
-  if (message.author.id === "660140769637564436") {
-    const attachment = new MessageAttachment(
-      "../assets/vidapic.png",
-      "help.png"
-    );
-
-    message.channel.send({
-      embed: {
-        files: [attachment],
-        image: {
-          url: "attachment://help.png",
-        },
-      },
-    } as {});
+  if (message.author.id === settings.troll_id) {
+    const attachment = new MessageEmbed().setImage('https://cdn.discordapp.com/attachments/538466109985390612/889241499932434503/CI29.png').setTitle('🤡')
+    message.channel.send({embeds: [attachment]});
   }
 
   if (checkMuted(message)) {
@@ -245,14 +235,15 @@ client.on("messageCreate", async (message) => {
       
       .addFields(
           {name: 'Now Playing:', value: `[${guildQueue?.nowPlaying?.name}](${guildQueue?.nowPlaying?.url}) | ${guildQueue?.nowPlaying?.duration} `, },
-          (songs || guildQueue?.songs?.length !== 1) && {name: 'Up Nex:t', value: '\u200B'}   
-          // { name: 'Estimated time until playing', value: (time / 1000).toString().replace('.', ':'),  inline: true},
+          (songs && guildQueue?.songs?.length >= 2) ? {name: 'Up Next:', value: '\u200B'} : {name: '', value: ''}   
+          // { name: 'Estimated time until playing', value: (time / 1000).toString().replaceAll('.', ':'),  inline: true},
       )
 
       if(songs) {
         songs.map((song, idx): any => {
-          if(song.isFirst || song.isLive || guildQueue?.songs?.length === 1) {
+          if(song.isFirst || song.isLive || song.queue.songs.length === 1) {
             return false;
+            
           } else {
             embeded.addField('\u200B', `${idx - 1}: [${song.name}](${song.url}) | ${song.duration} `)
           }
