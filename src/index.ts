@@ -1,8 +1,7 @@
 import {
   Player,
   RepeatMode,
-  Song,
-  StreamConnection
+  Song
 } from "discord-music-player";
 import {
   Client,
@@ -22,7 +21,8 @@ const roles = {
   muted: "Muted",
 };
 
-StreamConnection.errorMonitor.description;
+const regex1 = new RegExp(':', 'g')
+const regex2 = new RegExp('.', 'g')
 
 const checkRole = (message: Message) => {
   if (
@@ -65,7 +65,7 @@ const settings = {
   troll_id: process.env.TROLL_TOKEN
 };
 
-const player = new Player(client, { leaveOnEmpty: false, leaveOnStop: false });
+const player = new Player(client, { leaveOnEmpty: false, leaveOnStop: false, leaveOnEnd: true, timeout: 10 });
 
 client.player = player;
 
@@ -74,6 +74,8 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", async (message) => {
+  try {
+
   if (message.author.id === settings.troll_id) {
     const attachment = new MessageEmbed().setImage('https://cdn.discordapp.com/attachments/538466109985390612/889241499932434503/CI29.png').setTitle('🤡')
     message.channel.send({embeds: [attachment]});
@@ -117,17 +119,17 @@ client.on("messageCreate", async (message) => {
     // const embeded = new MessageEmbed().setColor('RANDOM').setDescription(`Now playing ${song?.name} - ${song.url}`).setURL(song.url as string)
     const time = new Promise<number>((resolve, _) => {
       const tot = song?.queue?.songs.reduce((pre, curr): any => {
-        return Number(curr.duration.replace(":", ".")) + pre;
+        return Number(curr.duration.replace(regex1, ".")) + pre;
       }, 0);
 
-      const real = tot - Number(song?.duration.replace(":", "."));
+      const real = tot - Number(song?.duration.replace(regex1, "."));
       resolve(real);
     });
 
 
     const embeded = new MessageEmbed()
       .setColor("#000000")
-      .setTitle(song?.name)
+      .setTitle(typeof song?.name === 'string' ? song?.name : 'Fuck of')
       .setURL(song?.url)
       .setAuthor(
         "Added to queue",
@@ -141,7 +143,7 @@ client.on("messageCreate", async (message) => {
           name: "Estimated time until playing",
           value: song?.isFirst
             ? "0"
-            : (await time).toString().replace(".", ":"),
+            : (await time).toString().replace(regex2, ":"),
           inline: true,
         }
       )
@@ -220,24 +222,29 @@ client.on("messageCreate", async (message) => {
     if (guildQueue === undefined) {
       message.channel.send("Queue is Empty");
     } else {
-      // const songs = guildQueue?.songs?.reduce((pre: string[], curr: Song, idx): any => {
-      //     if(curr?.isFirst) {
-      //       return;
-      //     }
-      //     pre.push(`${idx}: [${curr.name}](${curr.url}) | ${curr?.duration} Requested by: ${curr?.requestedBy}`)
-      // }, [])
+
+      let embeded: MessageEmbed
       const songs = guildQueue?.songs
-      const embeded = new MessageEmbed()
-      .setColor('#000000')
-      .setTitle(`Queue for ${message?.guild}`)
-      .setURL("https://github.com/axelburling/music-bot")
-      .setAuthor('Added to queue', message?.author?.avatarURL({size: 32}) as string, 'https://github.com/axelburling')
-      
-      .addFields(
-          {name: 'Now Playing:', value: `[${guildQueue?.nowPlaying?.name}](${guildQueue?.nowPlaying?.url}) | ${guildQueue?.nowPlaying?.duration} `, },
-          (songs && guildQueue?.songs?.length >= 2) ? {name: 'Up Next:', value: '\u200B'} : {name: '', value: ''}   
-          // { name: 'Estimated time until playing', value: (time / 1000).toString().replaceAll('.', ':'),  inline: true},
-      )
+      if(songs && guildQueue?.songs?.length >= 2) {
+         embeded = new MessageEmbed()
+        .setColor('#000000')
+        .setTitle(`Queue for ${message?.guild}`)
+        .setURL("https://github.com/axelburling/music-bot")
+        .setAuthor('Added to queue', message?.author?.avatarURL({size: 32}) as string, 'https://github.com/axelburling')
+        .addFields(
+            {name: 'Now Playing:', value: `[${guildQueue?.nowPlaying?.name}](${guildQueue?.nowPlaying?.url}) | ${guildQueue?.nowPlaying?.duration} `, },
+            {name: 'Up Next:', value: '\u200B'}  
+        )
+      } else {
+        embeded = new MessageEmbed()
+        .setColor('#000000')
+        .setTitle(`Queue for ${message?.guild}`)
+        .setURL("https://github.com/axelburling/music-bot")
+        .setAuthor('Added to queue', message?.author?.avatarURL({size: 32}) as string, 'https://github.com/axelburling')
+        .addFields(
+            {name: 'Now Playing:', value: `[${guildQueue?.nowPlaying?.name}](${guildQueue?.nowPlaying?.url}) | ${guildQueue?.nowPlaying?.duration} `, },
+        )
+      }
 
       if(songs) {
         songs.map((song, idx): any => {
@@ -275,31 +282,15 @@ client.on("messageCreate", async (message) => {
 
   if (command === "resume") {
     guildQueue?.setPaused(false);
+    message.channel.send('Resumed ▶');
   }
 
   if (command === "remove") {
     guildQueue?.remove(parseInt(args[0]));
   }
-  // if(message) {
-
-  //     const args = message.content.slice(settings.prefix.length).trim().split(/ +/g);
-  //     const command = args.shift();
-  //     let guildQueue = client.player.getQueue(message.guild.id);
-
-  //     if(guildQueue) {
-
-  //
-
-  // if(command === 'createProgressBar') {
-  //     const ProgressBar = guildQueue.createProgressBar();
-
-  //     // [======>              ][00:35/2:20]
-  //     console.log(ProgressBar.prettier);
-  // }
-  // }
-  // } else {
-  //     console.log("serouis problem")
-  // }
+} catch(err) {
+  message.channel.send("Stop being a dick")
+}
 });
 
 if (process.env.NODE_ENV !== "prod") {
