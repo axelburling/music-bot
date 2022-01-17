@@ -1,3 +1,4 @@
+import { getVoiceConnection } from '@discordjs/voice';
 import {
   Player,
   RepeatMode,
@@ -12,6 +13,7 @@ import {
   MessageEmbed
 } from "discord.js";
 import { config } from "dotenv";
+import { interactionHandlers } from './interactions';
 
 const roles = {
   admin: "Moderator",
@@ -71,6 +73,8 @@ client.player = player;
 
 client.on("ready", () => {
   console.log("I am ready to Play with DMP 🎶 client: " + client.user?.tag);
+
+  
 });
 
 client.on("messageCreate", async (message) => {
@@ -288,10 +292,84 @@ client.on("messageCreate", async (message) => {
   if (command === "remove") {
     guildQueue?.remove(parseInt(args[0]));
   }
+
+  if(command === 'deploy') {
+    if(message.guild) {
+      await message.guild.commands.set([
+        {
+          name: 'join',
+          description: 'Joins the voice channel that you are in',
+        },
+        {
+          name: 'record',
+          description: 'Enables recording for a user',
+          options: [
+            {
+              name: 'speaker',
+              type: 'USER' as const,
+              description: 'The user to record',
+              required: true,
+            },
+          ],
+        },
+        {
+          name: 'leave',
+          description: 'Leave the voice channel',
+        },
+        {
+          name: 'ping',
+          description: 'Pong!',
+        }
+      ]);
+    }
+  }
+
+ 
+
+       
+      
+  
 } catch(err) {
   message.channel.send("Stop being a dick")
 }
 });
+
+const recordable = new Set<string>();
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isCommand() || !interaction.guildId) {
+    console.log('not a command or not in a guild')
+    return;
+  };
+
+  if(interaction.commandName === 'ping') {
+    await interaction.reply({
+      content: 'pong',
+      ephemeral: true
+    });
+  }
+
+  const handler = interactionHandlers.get(interaction.commandName);
+
+  try {
+		if (handler) {
+			await handler(interaction, recordable, client, getVoiceConnection(interaction.guildId));
+		} else {
+			await interaction.reply('Unknown command');
+		}
+	} catch (error) {
+		console.warn(error);
+	}
+})
+
+client.on('interactionCreate', async interaction => {
+	if (!interaction.isCommand()) return;
+
+	if (interaction.commandName === 'ping') {
+		await interaction.reply({ content: 'Pong!', ephemeral: true });
+	}
+});
+
 
 if (process.env.NODE_ENV !== "prod") {
   client.login(settings.dev_token);
