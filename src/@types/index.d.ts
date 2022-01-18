@@ -19,3 +19,20 @@ declare module "node-vad" {
 
   export default VAD;
 }
+
+
+declare module 'vosk' {
+  class Model {
+      constructor(path: string)
+      free(): void
+  }
+
+  class Recognizer {
+    constructor({model, sampleRate}: {model: Model, sampleRate: number})
+    acceptWaveform(waveform: Buffer): any
+    result(): any
+    partialResult(): any
+    finalResult(): any
+    free(): void
+  }
+}

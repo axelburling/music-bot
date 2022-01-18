@@ -1,16 +1,20 @@
-FROM node:16.6.0
+FROM ubuntu
 
 WORKDIR /app
 
-COPY package*.json ./
-ADD package.json /app/package.json
-RUN npm install -g npm
+RUN apt update && apt upgrade -y
+
+RUN apt install -y \
+    ffmpeg \
+    nodejs \
+    npm \
+    wget \
+    unzip 
+
+COPY ./package*.json ./
+
+COPY . ./app/
+
 RUN npm install
 
-# Bundle app source
-COPY . .
-
-# Specify port
-
-# start app
-CMD ["npm", "start"]
+CMD npm run start
