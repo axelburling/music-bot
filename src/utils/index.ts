@@ -3,20 +3,20 @@ import { Readable } from 'stream';
 const fetch = require('node-fetch');
 
 
-
 class Utils {
     private baseUrl = 'https://api.wit.ai/speech?v=20210928'
     private WITAI_TOK: string
     private witAI_lastcallTS: any = null;
 
-
-    public token(t: string | undefined) {
-        if(!t) {
-            console.error('missing wit ai api token');
-        } else {
-            this.WITAI_TOK = t
-        }
+    constructor(token: string|undefined) {
+      if(!token) {
+        console.error('missing wit ai api token');
+    } else {
+        this.WITAI_TOK = token
     }
+    }
+
+
 
     private witAiCall = async (stream: any) => {
         const type = 'audio/raw;encoding=signed-integer;bits=16;rate=48k;endian=big'
@@ -116,16 +116,18 @@ class Utils {
             console.log('must provide text');
             return 'must provide text'
         }
-    
-        if(!text.startsWith('Music man')|| !text.startsWith('music man') || !text.startsWith('music Man') || !text.startsWith('Hello Music man') || !text.startsWith('')) {
-            console.log('no activation');
-            return
+
+        
+        if(!text.startsWith('Tesla')|| !text.startsWith('tesla') || !text.startsWith('hey Tesla') || !text.startsWith('hey tesla') || !text.startsWith('Hey Tesla') || !text.startsWith('Hey tesla')) {
+          console.log('no activation');
+          return
         }
-    
-        text = text.replace('.', '')
-        text = text.replace(':', '')
-        text = text.replace(',', '')
-        text = text.replace(';', '')
+        
+        text = text.replaceAll('.', '')
+        text = text.replaceAll(':', '')
+        text = text.replaceAll(',', '')
+        text = text.replaceAll(';', '')
+        console.log(text);
     
         console.log("split", text.split(' '));
     
