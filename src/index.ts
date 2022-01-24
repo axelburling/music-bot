@@ -1,5 +1,4 @@
 import { SpotifyPlugin } from "@distube/spotify";
-import { Player, RepeatMode } from "discord-music-player";
 import {
   Client,
   GuildChannelResolvable,
@@ -56,7 +55,6 @@ const checkMuted = (message: Message) => {
 config();
 
 export interface Client2 extends Client {
-  player: Player;
   distube: DisTube;
 }
 
@@ -95,18 +93,7 @@ client.distube = new DisTube(client, {
 
 const voiceManager = new DisTubeVoiceManager(client.distube);
 
-const player = new Player(client, {
-  leaveOnEmpty: false,
-  leaveOnStop: false,
-  leaveOnEnd: true,
-  timeout: 10,
-});
-
-client.player = player;
-
-const utils = new Utils()
-
-utils.token(settings.witai_token)
+const utils = new Utils(settings.witai_token);
 
 
 client.on("ready", () => {
@@ -143,9 +130,6 @@ client.on("message", async (message): Promise<void> => {
     if (command === "p" && name === "") {
       message.channel.send("Fuck off");
     }
-    let guildQueue = client.player.getQueue(
-      message?.guild?.id as unknown as string
-    );
 
     if (command === "p" || command === "P") {
       // console.log("p");
@@ -238,20 +222,6 @@ client.on("message", async (message): Promise<void> => {
       }
     }
 
-    if (command === "playlist") {
-      let queue = client.player.createQueue(message?.guild?.id as string);
-      if (!message?.member?.voice?.channel) {
-        message.channel.send("You must join a channel");
-        return;
-      }
-      await queue.join(
-        message?.member?.voice?.channel as GuildChannelResolvable
-      );
-      await queue.playlist(args.join(" ")).catch((_) => {
-        if (!guildQueue) queue.stop();
-      });
-    }
-
     if (command === "stop") {
       if (client.distube.queues.collection.array().length === 0) {
         message.channel.send("Queue is Empty");
@@ -261,16 +231,16 @@ client.on("message", async (message): Promise<void> => {
       }
     }
 
-    if (command === "removeLoop") {
-      guildQueue?.setRepeatMode(RepeatMode.DISABLED); // or 0 instead of RepeatMode.DISABLED
-    }
+    // if (command === "removeLoop") {
+    //   guildQueue?.setRepeatMode(RepeatMode.DISABLED); // or 0 instead of RepeatMode.DISABLED
+    // }
 
-    if (command === "toggleLoop") {
-      guildQueue?.setRepeatMode(RepeatMode.SONG); // or 1 instead of RepeatMode.SONG
-    }
-    if (command === "toggleQueueLoop") {
-      guildQueue?.setRepeatMode(RepeatMode.QUEUE); // or 2 instead of RepeatMode.QUEUE
-    }
+    // if (command === "toggleLoop") {
+    //   guildQueue?.setRepeatMode(RepeatMode.SONG); // or 1 instead of RepeatMode.SONG
+    // }
+    // if (command === "toggleQueueLoop") {
+    //   guildQueue?.setRepeatMode(RepeatMode.QUEUE); // or 2 instead of RepeatMode.QUEUE
+    // }
     if (command === "setVolume") {
       client.distube.setVolume(message, parseInt(args[0]));
     }
@@ -293,9 +263,9 @@ client.on("message", async (message): Promise<void> => {
       }
     }
 
-    if (command === "shuffle") {
-      guildQueue?.shuffle();
-    }
+    // if (command === "shuffle") {
+    //   guildQueue?.shuffle();
+    // }
 
     if (command === "q") {
       if (client.distube.queues.collection.array().length === 0) {
@@ -472,88 +442,7 @@ client.on("message", async (message): Promise<void> => {
         throw e;
       }
 
-      // const connection = joinVoiceChannel({
-      //   channelId: message?.member?.voice?.channel?.id as string,
-      //   guildId: message?.guild?.id as string,
-      //   adapterCreator: message.guild?.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-      //   selfMute: true,
-      //   selfDeaf: false,
-      // });
-
-      // let stream
-      // let buffer: Uint8Array[] = []
-      // connection?.receiver.speaking.on('start', (userId) => {
-      //   message.reply(`${userId} started speaking`);
-      //   stream = connection.receiver.subscribe(userId, {
-
-      //     read(size) {
-      //       return this.read(size);
-      //     }
-      //   })
-      //   stream.on('data', (chunk) => {
-      //     buffer.push(chunk)
-      //   })
-
-      //   stream.on('end', async () => {
-      //     console.log(buffer);
-
-      //   })
-
-      // })
-
-      // connection.receiver.speaking.on('end', async () => {
-      //   const new_buffer1 = Buffer.concat(buffer as Uint8Array[])
-      //   const duration = new_buffer1.length / 2000 / 4;
-      // console.log("duration: " + duration);
-
-      // if (duration < 1.0 || duration > 19) {
-      //   // 20 seconds max dur
-      //   console.log("TOO SHORT / TOO LONG; SKPPING");
-      //   return;
-      // }
-
-      // try {
-      //   let con_buffer = await convert_audio(new_buffer1)
-      //   const out = await transcribe(con_buffer)
-
-      //   console.log(out);
-      //   } catch (error) {
-
-      //   }
-
-      // })
     }
-
-    // if(command === 'deploy') {
-    //   if(message.guild) {
-    //     await message.guild.commands.set([
-    //       {
-    //         name: 'join',
-    //         description: 'Joins the voice channel that you are in',
-    //       },
-    //       {
-    //         name: 'record',
-    //         description: 'Enables recording for a user',
-    //         options: [
-    //           {
-    //             name: 'speaker',
-    //             type: 'USER' as const,
-    //             description: 'The user to record',
-    //             required: true,
-    //           },
-    //         ],
-    //       },
-    //       {
-    //         name: 'leave',
-    //         description: 'Leave the voice channel',
-    //       },
-    //       {
-    //         name: 'ping',
-    //         description: 'Pong!',
-    //       }
-    //     ]);
-    //   }
-    // }
   } catch (err) {
     console.log(err);
     message.channel.send("Stop being a dick");
