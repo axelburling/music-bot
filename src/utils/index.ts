@@ -1,5 +1,3 @@
-const fetch = require("node-fetch");
-
 class Utils {
   public progressBar = (pro: number) => {
     pro = Math.round(pro * 100);

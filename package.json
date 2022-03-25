@@ -11,9 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@discordjs/opus": "^0.6.0",
     "@distube/spotify": "^1.1.0",
-    "@mapbox/node-pre-gyp": "^1.0.1",
     "discord.js": "^12.5.1",
     "distube": "^3.2.0",
     "dotenv": "^10.0.0",
