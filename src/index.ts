@@ -30,11 +30,7 @@ const checkRole = (message: Message) => {
 };
 
 const checkMuted = (message: Message) => {
-  if (message.member?.roles.cache.find((r) => r.name === roles.muted)) {
-    return true;
-  } else {
-    return false;
-  }
+  return !!message.member?.roles.cache.find((r) => r.name === roles.muted);
 };
 
 config();
@@ -87,8 +83,6 @@ client.on("ready", () => {
 });
 
 client.on("message", async (message): Promise<void> => {
-  // voice.setSelfDeaf(false)
-  // voice.setSelfMute(false)
   try {
     if (message.author.id === settings.troll_id) {
       const attachment = new MessageEmbed()
@@ -96,11 +90,11 @@ client.on("message", async (message): Promise<void> => {
           "https://cdn.discordapp.com/attachments/538466109985390612/889241499932434503/CI29.png"
         )
         .setTitle("🤡");
-      message.channel.send({ embed: attachment });
+      await message.channel.send({ embed: attachment });
     }
 
     if (checkMuted(message)) {
-      message.channel.send("You have no rights✊🏿");
+      await message.channel.send("You have no rights✊🏿");
     }
 
     if (!message.content.startsWith("!")) {
@@ -114,14 +108,14 @@ client.on("message", async (message): Promise<void> => {
     const name = message.content.split(" ")[1];
     const command = args.shift();
     if (command === "p" && name === "") {
-      message.channel.send("Fuck off");
+      await message.channel.send("Fuck off");
     }
 
     if (command === "p" || command === "P") {
-      // console.log("p");
 
       const name = args.join(" ");
       try {
+        if(message.member?.voice)
         await client.distube.play(message.member?.voice.channel, name, {
           textChannel: message.channel,
         });
@@ -133,8 +127,8 @@ client.on("message", async (message): Promise<void> => {
           name
         );
 
-        if (!song || song === undefined || song === null) {
-          message.reply("I can't find that song");
+        if (!song) {
+          await message.reply("I can't find that song");
           return;
         }
 
@@ -170,9 +164,8 @@ client.on("message", async (message): Promise<void> => {
             "Place in queue",
             client.distube.queues.collection.array()[0].songs.length - 1 + 1
           );
-        // .addField("Position in queue", client.distube.queues.);
 
-        message.channel.send({ embed: embeded });
+        await message.channel.send({embed: embeded});
       } catch (error) {
         console.log(error);
       }
@@ -180,7 +173,7 @@ client.on("message", async (message): Promise<void> => {
 
     if (command === "summon") {
       if (!message?.member?.voice?.channel) {
-        message.channel.send("You must join a channel");
+        await message.channel.send("You must join a channel");
         return;
       }
       await voiceManager.join(
@@ -191,23 +184,23 @@ client.on("message", async (message): Promise<void> => {
     if (command === "s") {
       if (process.env.NODE_ENV !== "prod") {
         await client.distube.skip(message);
-        message.channel.send("Song skipped");
+        await message.channel.send("Song skipped");
       } else {
         if (checkRole(message)) {
           await client.distube.skip(message);
-          message.channel.send("Song skipped");
+          await message.channel.send("Song skipped");
         } else {
-          message.channel.send("No rights");
+          await message.channel.send("No rights");
         }
       }
     }
 
     if (command === "stop") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("Queue is Empty");
+        await message.channel.send("Queue is Empty");
       } else {
         client.distube?.stop(message);
-        message.channel.send("Stopped ⏹");
+        await message.channel.send("Stopped ⏹");
       }
     }
     if (command === "setVolume") {
@@ -216,7 +209,7 @@ client.on("message", async (message): Promise<void> => {
 
     if (command === "seek") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("Queue is Empty");
+       await message.channel.send("Queue is Empty");
       } else {
         client.distube?.seek(message, parseInt(args[0]));
         message.channel.send("Moving 🚚");
@@ -225,7 +218,7 @@ client.on("message", async (message): Promise<void> => {
 
     if (command === "clear") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("Queue is Empty");
+        await message.channel.send("Queue is Empty");
       } else {
         client.distube?.queues.collection
           .array()[0]
@@ -233,13 +226,13 @@ client.on("message", async (message): Promise<void> => {
             1,
             client.distube.queues.collection.array()[0].songs.length
           );
-        message.channel.send("Cleared ⏸");
+        await message.channel.send("Cleared ⏸");
       }
     }
 
     if (command === "q") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("Queue is Empty");
+        await message.channel.send("Queue is Empty");
       } else {
         let embeded: MessageEmbed;
         const songs = client.distube.queues.collection.array()[0].songs;
@@ -275,13 +268,13 @@ client.on("message", async (message): Promise<void> => {
           });
         }
 
-        message.channel.send({ embed: embeded });
+        await message.channel.send({ embed: embeded });
       }
     }
 
     if (command === "nowPlaying") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("No music is playing");
+        await message.channel.send("No music is playing");
         return;
       }
       const currSong = client.distube.queues.collection.array()[0].songs[0];
@@ -305,45 +298,59 @@ client.on("message", async (message): Promise<void> => {
           }
         );
 
-      message.channel.send({ embed: embeded });
+      await message.channel.send({ embed: embeded });
     }
 
     if (command === "pause") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("Queue is Empty");
+        await message.channel.send("Queue is Empty");
       } else {
         client.distube?.pause(message);
-        message.channel.send("Paused ⏸");
+        await message.channel.send("Paused ⏸");
       }
     }
 
     if (command === "resume") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("Queue is Empty");
+        await message.channel.send("Queue is Empty");
       } else {
         client.distube?.resume(message);
-        message.channel.send("Resumed ▶");
+        await message.channel.send("Resumed ▶");
       }
     }
 
     if (command === "remove") {
       if (client.distube.queues.collection.array().length === 0) {
-        message.channel.send("Queue is Empty");
+        await message.channel.send("Queue is Empty");
       } else {
         client.distube?.queues.collection
           .array()[0]
           .songs.splice(parseInt(args[0]), 1);
-        message.channel.send("Removed ▶");
+        await message.channel.send("Removed ▶");
       }
     }
   } catch (err) {
     console.log(err);
-    message.channel.send("Stop being a dick");
+    await message.channel.send("Stop being a dick");
   }
 });
+
+client.distube.on('error', (err) => {
+    console.error(err);
+}).on('searchNoResult', (err) => {
+    console.error(err);
+})
 
 if (process.env.NODE_ENV !== "prod") {
   client.login(settings.dev_token);
 } else {
   client.login(settings.token);
 }
+
+process.on("unhandledRejection", (err) => {
+    console.error(err);
+})
+
+process.on("uncaughtException", (err) => {
+    console.error(err);
+})
